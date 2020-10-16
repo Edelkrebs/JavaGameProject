@@ -3,6 +3,8 @@ package me.finnthehumanlol.lwjgl.engine.types;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
@@ -14,8 +16,9 @@ public class Mesh {
 	private int vao, vertexCount, attributeCount;
 	private int ibo = 0;
 	private Shader shader;
-	private float[] positions;
+	private float[] positions, texCoords;
 	private int[] indices;
+	private Texture texture;
 	
 	private List<Integer> vbos = new ArrayList<>();
 
@@ -25,6 +28,7 @@ public class Mesh {
 		vertexCount = positions.length / 3;
 		GL30.glBindVertexArray(vao);
 		addAttribute(0, positions, 3);
+		attachShader();
 	}
 	
 	public Mesh(float[] positions, int[] indices) {
@@ -34,39 +38,66 @@ public class Mesh {
 		vertexCount = indices.length;
 		GL30.glBindVertexArray(vao);
 		addAttribute(0, positions, 3);
+		addIndexBuffer(indices);
+		attachShader();
 	}
 
+	public void applyTexture(Texture texture, float[] texCoords) {
+		this.texture = texture;
+		this.shader = new Shader("src/me/finnthehumanlol/lwjgl/engine/shaders/defaultTexVs.glsl", "src/me/finnthehumanlol/lwjgl/engine/shaders/defaultTexFs.glsl");
+		this.texCoords = texCoords;
+		addAttribute(1, texCoords, 2);
+	}
+	
+	public void applyTexture(Texture texture, float[] texCoords, Shader texShader) {
+		this.texture = texture;
+		this.shader = texShader;
+		this.texCoords = texCoords;
+	}
+	
 	public void attachShader(Shader shader) {
 		this.shader = shader;
 	}
 	
 	public void attachShader() {
-		this.shader = new Shader("src/me/finnthehumanlol/lwjgl/engine/shaders/defaultFs.glsl", "src/me/finnthehumanlol/lwjgl/engine/shaders/defaultVs.glsl");
+		this.shader = new Shader("src/me/finnthehumanlol/lwjgl/engine/shaders/defaultVs.glsl", "src/me/finnthehumanlol/lwjgl/engine/shaders/defaultFs.glsl");
 	}
 	
 	public void detachShader() {
-		this.shader = null;
+		this.shader = new Shader("src/me/finnthehumanlol/lwjgl/engine/shaders/defaultVs.glsl", "src/me/finnthehumanlol/lwjgl/engine/shaders/defaultFs.glsl");
 	}
 	
 	public void prepareRender() {
 		GL30.glBindVertexArray(vao);
 		
-		for (int i = 0; i < attributeCount; i++)
-			GL20.glEnableVertexAttribArray(i);
-		if(shader != null) {
-			GL20.glUseProgram(shader.getProgram());
-		}
+		GL20.glEnableVertexAttribArray(0);
+
+		GL20.glEnableVertexAttribArray(1);
+		
+		GL20.glUseProgram(shader.getProgram());
 		
 		GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, ibo);
+		
+		if(texture != null) {			
+			GL13.glActiveTexture(GL13.GL_TEXTURE0);
+			GL11.glBindTexture(GL11.GL_TEXTURE_2D, texture.getTextureID());
+		}
 	}
 
 	public void finishRender() {
 		GL30.glBindVertexArray(0);
-		for (int i = 0; i < attributeCount; i++)
-			GL20.glDisableVertexAttribArray(i);
+		
+		GL20.glDisableVertexAttribArray(0);
+		GL20.glDisableVertexAttribArray(1);
+		
 		GL20.glUseProgram(0);
 
 		GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, 0);
+		
+		if(texture != null) {
+			GL13.glActiveTexture(0);
+			GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+		}
 	}
 
 	private void addIndexBuffer(int[] data) {
@@ -114,6 +145,18 @@ public class Mesh {
 
 	public Shader getShader() {
 		return shader;
+	}
+
+	public float[] getPositions() {
+		return positions;
+	}
+
+	public int[] getIndices() {
+		return indices;
+	}
+
+	public Texture getTexture() {
+		return texture;
 	}
 
 }

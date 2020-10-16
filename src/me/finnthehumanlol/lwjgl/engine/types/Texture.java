@@ -29,24 +29,25 @@ public class Texture {
 			IntBuffer w = stack.mallocInt(1);
 			IntBuffer h = stack.mallocInt(1);
 			IntBuffer comp = stack.mallocInt(1);
-		
+			
 			image = STBImage.stbi_load(texturePath, w, h, comp, 4);
 			
 			if(image == null) {
-				System.err.println("Couldnt load texture!");
+				System.err.println("Image could not be read:" + texturePath);
 			}
 			
 			width = w.get();
 			height = h.get();
 			this.texWidth = width;
 			this.texHeight = height;
-			
 		}
 
 		textureID = GL11.glGenTextures();
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID);
 		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
 		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL11.GL_REPEAT);
+		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL11.GL_REPEAT);
 		GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, width, height, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, image);
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
 		

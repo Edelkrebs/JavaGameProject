@@ -1,10 +1,8 @@
 package me.finnthehumanlol.lwjgl.engine.core;
 
-public interface MainGameLoop {
+public interface MainGameLoop extends Updateable{
 
 	public void start();
-	public void update();
-	public void render();
 	public void stop();
 	
 }
